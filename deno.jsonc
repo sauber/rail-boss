@@ -1,0 +1,7 @@
+{
+  "deploy": {
+    "org": "sauber",
+    "app": "rail-boss"
+  }
+}
+

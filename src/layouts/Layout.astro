@@ -1,3 +1,11 @@
+---
+import { StationFactory } from '../lib/StationFactory.ts';
+import Station from '../components/Station.astro';
+import ControlPanel from '../components/ControlPanel.astro';
+
+const factory = new StationFactory(100, 100);
+const stations = factory.createRelativeStations(4);
+---
 <!doctype html>
 <html lang="en">
 	<head>
@@ -9,15 +17,33 @@
 		<title>Astro Basics</title>
 	</head>
 	<body>
+		<div class="landscape-canvas">
+			{stations.map((station) => (
+				<Station station={station} />
+			))}
+		</div>
 		<slot />
+		<ControlPanel />
 	</body>
 </html>
-
 <style>
 	html,
 	body {
 		margin: 0;
 		width: 100%;
 		height: 100%;
+		font-family: "Roboto Mono", monospace;
+		color: #eaeaea;
+	}
+
+	.landscape-canvas {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 66vh;
+		background: black;
+		background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, #006400 5px, #006400 10px);
+		z-index: 0;
 	}
 </style>

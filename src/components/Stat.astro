@@ -1,0 +1,39 @@
+---
+interface StatProps {
+  label: string;
+  value: string;
+}
+
+const { label, value } = Astro.props as StatProps;
+---
+
+<!-- src/components/Stat.astro -->
+<div class="stat">
+  <span class="stat-label">{label}</span>
+  <span class="stat-value">{value}</span>
+</div>
+
+<style>
+.stat {
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-top: 4px;
+}
+</style>

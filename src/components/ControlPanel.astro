@@ -1,0 +1,164 @@
+---
+const factory = new (await import('../lib/StationFactory.ts')).StationFactory(100, 100);
+const stations = factory.createRelativeStations(4);
+---
+<footer class="control-panel">
+  <h2>Rail Boss</h2>
+
+  <div class="control-container">
+
+    <!-- Engine Control Section -->
+    <div class="control-group">
+      <div class="control-item">
+        <span class="control-label">SPEED</span>
+        <div class="speed-display" id="speedDisplay">0 km/h</div>
+      </div>
+      <div class="control-item buttons">
+        <button class="physical-button" id="startBtn">▶ Start</button>
+        <button class="physical-button" id="stopBtn">⚠ Stop</button>
+      </div>
+    </div>
+
+    <!-- Train Status Section -->
+    <div class="control-group">
+      <div class="control-item">
+        <span class="control-label">STATUS</span>
+        <div class="status-indicator" id="statusIndicator"></div>
+      </div>
+      <div class="control-item">
+        <span class="control-label">FUEL LEVEL</span>
+        <div class="fuel-display" id="fuelDisplay">85%</div>
+      </div>
+    </div>
+
+    <!-- Display Section (route map) -->
+    <div class="control-group">
+      <div class="control-item full-width">
+        <span class="control-label">ROUTE MAP</span>
+        <div class="route-map" id="routeMap">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p>Version: 0.1</p>
+</footer>
+
+<style>
+.control-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 34vh;
+  background: #111 !important;
+  color: #eee !important;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  border-top: 3px solid #666;
+  z-index: 1000;
+}
+
+.control-panel h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  color: #cfc !important;
+  letter-spacing: 1px;
+}
+
+.control-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.control-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: #222 !important;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #333;
+}
+
+.control-item {
+  flex: 1 1 200px;
+  text-align: center;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.control-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.speed-display,
+.fuel-display {
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: #000 !important;
+  color: #0f0 !important;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #0a0;
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #555;
+  background: #4caf50;
+  margin: 0 auto;
+}
+
+.physical-button {
+  background: #444 !important;
+  color: #eee !important;
+  border: 2px solid #555;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: background 0.2s ease;
+}
+
+.physical-button:hover {
+  background: #666 !important;
+}
+
+.full-width {
+  flex: 1 1 100%;
+}
+
+.route-map {
+  width: 100%;
+  height: 80px;
+  background: #333 !important;
+  border: 1px solid #555;
+  border-radius: 3px;
+  position: relative;
+}
+
+.route-map::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(-45deg, #222 0, #222 10px, #444 10px, #444 20px);
+  opacity: 0.4;
+}
+</style>

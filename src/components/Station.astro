@@ -1,0 +1,28 @@
+---
+interface StationProps {
+  station: {
+    name: string;
+    xPct: number;
+    yPct: number;
+  };
+}
+const { station } = Astro.props as StationProps;
+---
+
+<div class="station"
+     style={{ left: `${station.xPct}%`, top: `${station.yPct}%` }}>
+  {station.name}
+</div>
+
+<style>
+.station {
+  position: absolute;
+  color: white;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+</style>
