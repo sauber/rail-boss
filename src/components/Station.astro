@@ -1,28 +1,18 @@
 ---
-interface StationProps {
-  station: {
-    name: string;
-    xPct: number;
-    yPct: number;
-  };
+/**
+ * Astro component for rendering a Station.
+ * Expects a `station` prop of type `Station` from the lib.
+ */
+import type { Station } from '../lib/Station.ts';
+interface Props {
+  station: Station;
 }
-const { station } = Astro.props as StationProps;
+const { station } = Astro.props;
 ---
 
-<div class="station"
-     style={{ left: `${station.xPct}%`, top: `${station.yPct}%` }}>
-  {station.name}
+<div class="station" data-station-id={station.id} style={`border: 1px solid ${station.colour}; padding: 4px; margin: 4px; display: inline-block;`}>
+  <div class="station-name"><strong>{station.name}</strong></div>
+  <div class="station-colour" style={`background-color: ${station.colour}; width: 12px; height: 12px; display: inline-block; margin-right: 4px;`}></div>
+  <div class="platforms">Platforms: {station.capacity()}</div>
+  <div class="waiting-passengers">Waiting: {station.waitingPassengers}</div>
 </div>
-
-<style>
-.station {
-  position: absolute;
-  color: white;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 2px 4px;
-  border-radius: 4px;
-  font-size: 12px;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-}
-</style>

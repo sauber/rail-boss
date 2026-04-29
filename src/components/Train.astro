@@ -1,0 +1,17 @@
+---
+/**
+ * Astro component for rendering a Train.
+ * Expects a `train` prop of type `Train` from the lib.
+ */
+import type { Train } from '../lib/Train.ts';
+export interface Props {
+  train: Train;
+}
+---
+
+<div class="train" data-train-id="{train.id}" style="border: 1px solid #555; padding: 4px; margin: 4px;">
+  <div class="train-type">Type: {train.type}</div>
+  <div class="train-capacity">Passengers: {train.passengers}/{train.maxCapacity}</div>
+  <div class="train-wear">Wear: {(train.wear * 100).toFixed(0)}%</div>
+  <div class="train-state">State: {train.state()}</div>
+</div>

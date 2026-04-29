@@ -1,49 +1,83 @@
 ---
-import { StationFactory } from '../lib/StationFactory.ts';
-import Station from '../components/Station.astro';
+// src/layouts/Layout.astro
+import StartupModal from '../components/StartupModal.astro';
+import Map from '../components/Map.astro';
 import ControlPanel from '../components/ControlPanel.astro';
-
-const factory = new StationFactory(100, 100);
-const stations = factory.createRelativeStations(4);
 ---
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<div class="landscape-canvas">
-			{stations.map((station) => (
-				<Station station={station} />
-			))}
-		</div>
-		<slot />
-		<ControlPanel />
-	</body>
-</html>
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-		font-family: "Roboto Mono", monospace;
-		color: #eaeaea;
-	}
+<div class="game-container">
+  <div class="map-view">
+    <Map />
+  </div>
+  <div class="control-panel">
+    <ControlPanel />
+  </div>
+  <StartupModal />
+</div>
 
-	.landscape-canvas {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 66vh;
-		background: black;
-		background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, #006400 5px, #006400 10px);
-		z-index: 0;
-	}
+<style>
+.game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.map-view {
+  flex: 2;
+  min-height: 0;
+  position: relative;
+}
+.control-panel {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+}
+.startup-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
 </style>
+
+<script>
+// Initialize game state
+const init = async () => {
+  const TrackInventory = await import('../lib/TrackInventory.ts');
+  const Station = await import('../lib/Station.ts');
+
+  // Create inventory and stations
+  const inventory = new TrackInventory.TrackInventory();
+  const stations = [
+    new Station.Station('s1', 'Copenhagen', '#FF0000', Station.StationSize.Small),
+    new Station.Station('s2', 'Aarhus', '#00FF00', Station.StationSize.Medium)
+  ];
+
+  // Initialize game state
+  const gameState = {
+    inventory,
+    stations,
+    account: {
+      balance: 1000,
+      expenses: 0,
+      income: 0
+    }
+  };
+
+  // Render initial state
+  renderGameState(gameState);
+};
+
+// Render game state (stub implementation)
+const renderGameState = (state: any) => {
+  // Implement rendering logic here
+  console.log('Game state rendered:', state);
+};
+
+// Initialize on load
+init();
+</script>

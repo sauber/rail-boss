@@ -1,0 +1,8 @@
+--- layout: root ---
+
+<div class="track" data-track-id="{{track.id}}" data-state="{{track.state()}}">
+  <div class="track-info">
+    {{track.stationA}} ↔ {{track.stationB}} ({{track.distance}} km)
+  </div>
+  <div class="track-wear">Wear: {{(track.wear * 100).toFixed(0)}}%</div>
+</div>

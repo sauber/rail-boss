@@ -1,0 +1,111 @@
+---
+// Startup modal component that displays game instructions on page load
+---
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none; /* hidden initially */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+  }
+  .modal-close:hover {
+    color: #000;
+  }
+  .modal-body {
+    line-height: 1.6;
+  }
+  .modal-body ul {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  .modal-body li {
+    margin-bottom: 0.5rem;
+  }
+</style>
+
+<!-- Game Instructions Modal -->
+<div id="game-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Welcome to Rail Boss!</h2>
+      <button class="modal-close" id="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>Objective:</strong> Build and manage a successful railway network by connecting stations, managing trains, and maintaining a profitable budget.</p>
+      <p><strong>How to add/remove tracks:</strong></p>
+      <ul>
+        <li>Add tracks: Use the control panel to select track types and click on stations to connect them on the map.</li>
+        <li>Remove tracks: Select an existing track on the map and use the "Remove" option in the control panel.</li>
+      </ul>
+      <p><strong>How to add/remove trains:</strong></p>
+      <ul>
+        <li>Add trains: Assign trains to available tracks via the train management section in the control panel.</li>
+        <li>Remove trains: Select an active train and choose to decommission it from the control panel.</li>
+      </ul>
+      <p>Close this modal to start building your railway empire!</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Modal handling
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('game-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+
+    // Show modal on page load
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        if (modal) modal.style.display = 'none';
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>
