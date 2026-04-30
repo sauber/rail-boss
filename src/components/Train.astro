@@ -1,17 +1,87 @@
 ---
 /**
  * Astro component for rendering a Train.
- * Expects a `train` prop of type `Train` from the lib.
+ * Expects a `train` prop with train properties.
  */
-import type { Train } from '../lib/Train.ts';
 export interface Props {
-  train: Train;
+  train: {
+    id: string;
+    type: string;
+    passengers: number;
+    maxCapacity: number;
+    wear: number;
+    state: string;
+  };
 }
+const { train } = Astro.props;
 ---
-
-<div class="train" data-train-id="{train.id}" style="border: 1px solid #555; padding: 4px; margin: 4px;">
+<div class="train" data-train-id={train.id} data-state={train.state}>
   <div class="train-type">Type: {train.type}</div>
   <div class="train-capacity">Passengers: {train.passengers}/{train.maxCapacity}</div>
-  <div class="train-wear">Wear: {(train.wear * 100).toFixed(0)}%</div>
-  <div class="train-state">State: {train.state()}</div>
+  <div class="train-wear">Wear: {Math.round(train.wear * 100)}%</div>
+  <div class="train-state">State: {train.state}</div>
+  <div class="train-controls">
+    <button class="physical-button" onclick={`handleTrainAction('start', '${train.id}')`}>
+      {train.state === 'stopped' ? 'Start' : 'Stop'}
+    </button>
+    <button class="physical-button" onclick={`handleTrainAction('repair', '${train.id}')`}>
+      Repair
+    </button>
+  </div>
 </div>
+
+<script>
+  function handleTrainAction(action, trainId) {
+    const event = new CustomEvent('train-action', {
+      detail: { action, trainId }
+    });
+    window.dispatchEvent(event);
+  }
+
+  // Listen for game state updates
+  window.addEventListener('game-state-update', (e) => {
+    const gameState = e.detail;
+    // Update train state if needed
+  });
+</script>
+
+<style>
+  .train {
+    border: 1px solid #555;
+    padding: 8px;
+    margin: 4px;
+    border-radius: 4px;
+    background: #f0f0f0;
+  }
+  .train-type {
+    font-weight: bold;
+  }
+  .train-capacity {
+    margin: 4px 0;
+  }
+  .train-wear {
+    color: #666;
+  }
+  .train-state {
+    color: #666;
+  }
+  .train-controls {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+  }
+  .physical-button {
+    background: #444 !important;
+    color: #eee !important;
+    border: 2px solid #555;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: background 0.2s ease;
+  }
+  .physical-button:hover {
+    background: #666 !important;
+  }
+</style>

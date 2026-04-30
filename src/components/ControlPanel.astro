@@ -1,41 +1,47 @@
 ---
-const factory = new (await import('../lib/StationFactory.ts')).StationFactory(100, 100);
-const stations = factory.createRelativeStations(4);
+// ControlPanel component with game controls and status
 ---
+
 <footer class="control-panel">
-  <h2>Rail Boss</h2>
+  <div class="panel-header">
+    <h2>Rail Boss</h2>
+    <span class="version">v0.2</span>
+  </div>
 
   <div class="control-container">
-
-    <!-- Engine Control Section -->
-    <div class="control-group">
-      <div class="control-item">
-        <span class="control-label">SPEED</span>
-        <div class="speed-display" id="speedDisplay">0 km/h</div>
-      </div>
-      <div class="control-item buttons">
-        <button class="physical-button" id="startBtn">▶ Start</button>
-        <button class="physical-button" id="stopBtn">⚠ Stop</button>
-      </div>
-    </div>
-
-    <!-- Train Status Section -->
-    <div class="control-group">
-      <div class="control-item">
-        <span class="control-label">STATUS</span>
-        <div class="status-indicator" id="statusIndicator"></div>
-      </div>
-      <div class="control-item">
-        <span class="control-label">FUEL LEVEL</span>
-        <div class="fuel-display" id="fuelDisplay">85%</div>
-      </div>
-    </div>
-
-    <!-- Display Section (route map) -->
+    <!-- Purchase Section -->
     <div class="control-group">
       <div class="control-item full-width">
-        <span class="control-label">ROUTE MAP</span>
-        <div class="route-map" id="routeMap">
+        <span class="control-label">PURCHASE</span>
+        <div class="purchase-buttons">
+          <button class="physical-button" id="buyRegionalBtn" onclick="buyTrain('regional')">
+            Regional (5,000)
+          </button>
+          <button class="physical-button" id="buyIntercityBtn" onclick="buyTrain('intercity')">
+            Intercity (15,000)
+          </button>
+          <button class="physical-button" id="buyExpressBtn" onclick="buyTrain('express')">
+            Express (30,000)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Controls Section -->
+    <div class="control-group">
+      <div class="control-item">
+        <span class="control-label">GAME</span>
+        <div class="buttons">
+          <button class="physical-button" id="startBtn" onclick="startGame()">▶ Start</button>
+          <button class="physical-button" id="stopBtn" onclick="stopGame()">⚠ Stop</button>
+          <button class="physical-button" id="repairBtn" onclick="repairAll()">🔧 Repair All</button>
+        </div>
+      </div>
+      <div class="control-item">
+        <span class="control-label">STATUS</span>
+        <div class="status-indicator" id="statusIndicator">
+          <span class="status-dot"></span>
+          <span class="status-text">Ready</span>
         </div>
       </div>
     </div>
@@ -44,133 +50,403 @@ const stations = factory.createRelativeStations(4);
     <div class="control-group">
       <div class="control-item">
         <span class="control-label">BALANCE</span>
-        <div class="speed-display" id="balanceDisplay">🚂 2,500</div>
+        <div class="balance-display" id="balanceDisplay">🚂 2,500</div>
       </div>
       <div class="control-item">
-        <span class="control-label">TRACKS</span>
-        <div class="fuel-display" id="trackStats">🛤️ 0 km</div>
+        <span class="control-label">NEXT STATION</span>
+        <div class="next-station-display" id="nextStationDisplay">Need 5,000</div>
       </div>
     </div>
 
-  </div>
+    <!-- Statistics Section -->
+    <div class="control-group">
+      <div class="stat-grid">
+        <div class="stat-item">
+          <span class="stat-label">STATIONS</span>
+          <span class="stat-value" id="stationCount">4</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">TRAINS</span>
+          <span class="stat-value" id="trainCount">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">TRACKS</span>
+          <span class="stat-value" id="trackCount">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">PASSENGERS</span>
+          <span class="stat-value" id="passengerCount">0</span>
+        </div>
+      </div>
+    </div>
 
-  <p>Version: 0.1</p>
+    <!-- Message Log Section -->
+    <div class="control-group">
+      <div class="control-item full-width">
+        <span class="control-label">MESSAGES</span>
+        <div class="message-log" id="messageLog">
+          <div class="message info">Welcome to Rail Boss!</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </footer>
 
+<script>
+  // Game control functions
+  function buyTrain(type: string) {
+    const prices: { [key: string]: number } = { regional: 5000, intercity: 15000, express: 30000 };
+    const price = prices[type];
+    const gameState = (window as any).gameState;
+    
+    if (!gameState) return;
+    
+    if (gameState.account.balance < price) {
+      showMessage('Insufficient funds for ' + type + ' train!', 'error');
+      return;
+    }
+    
+    gameState.account.balance -= price;
+    gameState.account.expenses += price;
+    
+    const train = {
+      id: 'train-' + Date.now(),
+      type: type,
+      passengers: 0,
+      maxCapacity: type === 'regional' ? 50 : type === 'intercity' ? 150 : 300,
+      wear: 0,
+      state: 'stopped'
+    };
+    
+    gameState.trains.push(train);
+    updateGameState();
+    showMessage('Purchased ' + type + ' train for ' + price + '!', 'success');
+  }
+
+  function startGame() {
+    const gameState = (window as any).gameState;
+    if (!gameState) return;
+    
+    gameState.running = true;
+    updateGameState();
+    showMessage('Game started!', 'success');
+    
+    const statusIndicator = document.getElementById('statusIndicator');
+    if (statusIndicator) {
+      statusIndicator.querySelector('.status-dot')?.classList.add('active');
+      statusIndicator.querySelector('.status-text')!.textContent = 'Running';
+    }
+  }
+
+  function stopGame() {
+    const gameState = (window as any).gameState;
+    if (!gameState) return;
+    
+    gameState.running = false;
+    updateGameState();
+    showMessage('Game paused.', 'info');
+    
+    const statusIndicator = document.getElementById('statusIndicator');
+    if (statusIndicator) {
+      statusIndicator.querySelector('.status-dot')?.classList.remove('active');
+      statusIndicator.querySelector('.status-text')!.textContent = 'Paused';
+    }
+  }
+
+  function repairAll() {
+    const gameState = (window as any).gameState;
+    if (!gameState) return;
+    
+    let totalCost = 0;
+    gameState.trains.forEach((train: any) => {
+      if (train.wear > 0.5) {
+        const cost = Math.round(train.maxCapacity * 0.5 * (1 + train.wear));
+        totalCost += cost;
+        train.wear = 0;
+      }
+    });
+    
+    gameState.tracks.forEach((track: any) => {
+      if (track.wear > 0.5) {
+        const cost = Math.round(track.distance * 100 * 0.5 * (1 + track.wear));
+        totalCost += cost;
+        track.wear = 0;
+      }
+    });
+    
+    if (totalCost > gameState.account.balance) {
+      showMessage('Insufficient funds for repairs! Need ' + totalCost, 'error');
+      return;
+    }
+    
+    gameState.account.balance -= totalCost;
+    gameState.account.expenses += totalCost;
+    updateGameState();
+    showMessage('Repaired all for ' + totalCost + '!', 'success');
+  }
+
+  function showMessage(text: string, type: string) {
+    type = type || 'info';
+    const messageLog = document.getElementById('messageLog');
+    if (!messageLog) return;
+    
+    const message = document.createElement('div');
+    message.className = 'message ' + type;
+    message.textContent = text;
+    messageLog.appendChild(message);
+    messageLog.scrollTop = messageLog.scrollHeight;
+    
+    // Dispatch event for other components (but don't listen to it here to avoid recursion)
+    const event = new CustomEvent('game-message', { 
+      detail: { text, type, timestamp: Date.now() } 
+    });
+    window.dispatchEvent(event);
+  }
+
+  function updateGameState() {
+    const gameState = (window as any).gameState;
+    if (!gameState) return;
+    
+    // Update displays
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    if (balanceDisplay) {
+      balanceDisplay.textContent = '🚂 ' + gameState.account.balance.toLocaleString();
+    }
+    
+    const stationCount = document.getElementById('stationCount');
+    if (stationCount) stationCount.textContent = gameState.stations.length;
+    
+    const trainCount = document.getElementById('trainCount');
+    if (trainCount) trainCount.textContent = gameState.trains.length;
+    
+    const trackCount = document.getElementById('trackCount');
+    if (trackCount) trackCount.textContent = gameState.tracks.length;
+    
+    // Calculate total passengers
+    let totalPassengers = 0;
+    gameState.stations.forEach((s: any) => totalPassengers += s.waitingPassengers);
+    gameState.trains.forEach((t: any) => totalPassengers += t.passengers);
+    
+    const passengerCount = document.getElementById('passengerCount');
+    if (passengerCount) passengerCount.textContent = String(totalPassengers);
+    
+    // Update next station threshold
+    const thresholds = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000];
+    const nextThreshold = thresholds[gameState.stations.length - 4] || 0;
+    const nextStationDisplay = document.getElementById('nextStationDisplay');
+    if (nextStationDisplay) {
+      if (nextThreshold > 0) {
+        const needed = nextThreshold - gameState.account.balance;
+        nextStationDisplay.textContent = needed > 0 ? 'Need ' + needed.toLocaleString() : 'Ready!';
+      } else {
+        nextStationDisplay.textContent = 'Max stations!';
+      }
+    }
+    
+    // Dispatch event
+    const event = new CustomEvent('game-state-update', { detail: gameState });
+    window.dispatchEvent(event);
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    updateGameState();
+  });
+</script>
+
 <style>
-.control-panel {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100vw;
-  height: 34vh;
-  background: #111 !important;
-  color: #eee !important;
-  padding: 12px 20px;
-  box-sizing: border-box;
-  font-size: 0.9rem;
-  border-top: 3px solid #666;
-  z-index: 1000;
-}
+  .control-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 34vh;
+    background: #111 !important;
+    color: #eee !important;
+    padding: 12px 20px;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+    border-top: 3px solid #666;
+    z-index: 1000;
+    overflow-y: auto;
+  }
 
-.control-panel h2 {
-  margin: 0 0 10px;
-  font-size: 1.2rem;
-  color: #cfc !important;
-  letter-spacing: 1px;
-}
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
 
-.control-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+  .panel-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #cfc !important;
+    letter-spacing: 1px;
+  }
 
-.control-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  background: #222 !important;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #333;
-}
+  .version {
+    font-size: 0.8rem;
+    color: #aaa;
+  }
 
-.control-item {
-  flex: 1 1 200px;
-  text-align: center;
-}
+  .control-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-.buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 8px;
-}
+  .control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: #222 !important;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #333;
+  }
 
-.control-label {
-  display: block;
-  font-size: 0.75rem;
-  color: #aaa;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+  .control-item {
+    flex: 1 1 200px;
+    text-align: center;
+  }
 
-.speed-display,
-.fuel-display {
-  font-size: 1.4rem;
-  font-weight: 700;
-  background: #000 !important;
-  color: #0f0 !important;
-  padding: 4px 8px;
-  border-radius: 3px;
-  border: 1px solid #0a0;
-}
+  .full-width {
+    flex: 1 1 100%;
+  }
 
-.status-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid #555;
-  background: #4caf50;
-  margin: 0 auto;
-}
+  .control-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-.physical-button {
-  background: #444 !important;
-  color: #eee !important;
-  border: 2px solid #555;
-  padding: 6px 12px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-family: inherit;
-  transition: background 0.2s ease;
-}
+  .purchase-buttons, .buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 
-.physical-button:hover {
-  background: #666 !important;
-}
+  .physical-button {
+    background: #444 !important;
+    color: #eee !important;
+    border: 2px solid #555;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: background 0.2s ease;
+  }
 
-.full-width {
-  flex: 1 1 100%;
-}
+  .physical-button:hover {
+    background: #666 !important;
+  }
 
-.route-map {
-  width: 100%;
-  height: 80px;
-  background: #333 !important;
-  border: 1px solid #555;
-  border-radius: 3px;
-  position: relative;
-}
+  .balance-display, .next-station-display {
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: #000 !important;
+    color: #0f0 !important;
+    padding: 4px 8px;
+    border-radius: 3px;
+    border: 1px solid #0a0;
+  }
 
-.route-map::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(-45deg, #222 0, #222 10px, #444 10px, #444 20px);
-  opacity: 0.4;
-}
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid #555;
+    background: #4caf50;
+  }
+
+  .status-dot.active {
+    background: #4caf50;
+    box-shadow: 0 0 8px #4caf50;
+  }
+
+  .status-text {
+    font-size: 0.9rem;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #aaa;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #eee;
+  }
+
+  .message-log {
+    height: 60px;
+    overflow-y: auto;
+    background: #000 !important;
+    border: 1px solid #333;
+    border-radius: 3px;
+    padding: 4px;
+    font-size: 0.8rem;
+  }
+
+  .message {
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    border-radius: 2px;
+  }
+
+  .message.info {
+    color: #0af;
+    background: rgba(0, 170, 255, 0.1);
+  }
+
+  .message.success {
+    color: #0f0;
+    background: rgba(0, 255, 0, 0.1);
+  }
+
+  .message.error {
+    color: #f00;
+    background: rgba(255, 0, 0, 0.1);
+  }
+
+  .message-log::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .message-log::-webkit-scrollbar-track {
+    background: #222;
+  }
+
+  .message-log::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
+  }
 </style>

@@ -4,6 +4,7 @@ import StartupModal from '../components/StartupModal.astro';
 import Map from '../components/Map.astro';
 import ControlPanel from '../components/ControlPanel.astro';
 ---
+
 <div class="game-container">
   <div class="map-view">
     <Map />
@@ -14,70 +15,48 @@ import ControlPanel from '../components/ControlPanel.astro';
   <StartupModal />
 </div>
 
-<style>
-.game-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  position: relative;
-}
-.map-view {
-  flex: 2;
-  min-height: 0;
-  position: relative;
-}
-.control-panel {
-  flex: 1;
-  min-height: 0;
-  position: relative;
-  z-index: 1;
-}
-.startup-modal {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-}
-</style>
-
 <script>
-// Initialize game state
-const init = async () => {
-  const TrackInventory = await import('../lib/TrackInventory.ts');
-  const Station = await import('../lib/Station.ts');
-
-  // Create inventory and stations
-  const inventory = new TrackInventory.TrackInventory();
-  const stations = [
-    new Station.Station('s1', 'Copenhagen', '#FF0000', Station.StationSize.Small),
-    new Station.Station('s2', 'Aarhus', '#00FF00', Station.StationSize.Medium)
-  ];
-
-  // Initialize game state
-  const gameState = {
-    inventory,
-    stations,
-    account: {
-      balance: 1000,
-      expenses: 0,
-      income: 0
-    }
+  // Import GameState class for client-side use
+  import { GameState } from '../lib/GameState.ts';
+  
+  // Initialize game state with stations including positions
+  const init = async () => {
+    const gameState = new GameState();
+    // Store globally for other components
+    (window as any).gameState = gameState;
+    // Dispatch initial state event
+    const event = new CustomEvent('game-state-update', { detail: gameState });
+    window.dispatchEvent(event);
   };
-
-  // Render initial state
-  renderGameState(gameState);
-};
-
-// Render game state (stub implementation)
-const renderGameState = (state: any) => {
-  // Implement rendering logic here
-  console.log('Game state rendered:', state);
-};
-
-// Initialize on load
-init();
+  init();
 </script>
+
+<style>
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+  .map-view {
+    flex: 2;
+    min-height: 0;
+    position: relative;
+  }
+  .control-panel {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .startup-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+  }
+</style>

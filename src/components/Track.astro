@@ -1,8 +1,41 @@
---- layout: root ---
-
-<div class="track" data-track-id="{{track.id}}" data-state="{{track.state()}}">
+---
+/**
+ * Astro component for rendering a Track.
+ * Expects a `track` prop with track properties.
+ */
+export interface Props {
+  track: {
+    id: string;
+    stationA: string;
+    stationB: string;
+    distance: number;
+    wear: number;
+    state: string;
+  };
+}
+const { track } = Astro.props;
+---
+<div class="track" data-track-id={track.id} data-state={track.state}>
   <div class="track-info">
-    {{track.stationA}} ↔ {{track.stationB}} ({{track.distance}} km)
+    {track.stationA} ↔ {track.stationB} ({track.distance} km)
   </div>
-  <div class="track-wear">Wear: {{(track.wear * 100).toFixed(0)}}%</div>
+  <div class="track-wear">Wear: {Math.round(track.wear * 100)}%</div>
 </div>
+
+<style>
+  .track {
+    border: 1px solid #ccc;
+    padding: 8px;
+    margin: 4px;
+    border-radius: 4px;
+    background: #f9f9f9;
+  }
+  .track-info {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .track-wear {
+    font-size: 0.9em;
+    color: #666;
+  }
+</style>

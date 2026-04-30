@@ -1,18 +1,163 @@
 ---
 // src/components/Map.astro
+// No server-side imports needed - stations come from client-side gameState
 ---
-<div class="map-container">
+
+<div class="map-container" id="mapContainer">
+  <svg class="map-svg" id="mapSvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+    <g id="tracksLayer"></g>
+    <g id="stationsLayer"></g>
+    <g id="trainsLayer"></g>
+  </svg>
 </div>
 
+<script>
+  // Render stations from the global gameState
+  function renderStations() {
+    const gameState = (window as any).gameState;
+    if (!gameState || !gameState.stations) return;
+
+    const layer = document.getElementById('stationsLayer');
+    if (!layer) return;
+    layer.innerHTML = '';
+
+    gameState.stations.forEach((station: any) => {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('data-station-id', station.id);
+
+      // Circle representing the station
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', String(station.x));
+      circle.setAttribute('cy', String(station.y));
+      circle.setAttribute('r', String(station.size * 5));
+      circle.setAttribute('fill', station.colour);
+      circle.setAttribute('stroke', '#000');
+      circle.setAttribute('stroke-width', '2');
+      g.appendChild(circle);
+
+      // Text label for the station name
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', String(station.x));
+      text.setAttribute('y', String(station.y - (station.size * 5) - 5));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('fill', '#fff');
+      text.textContent = station.name;
+      g.appendChild(text);
+
+      layer.appendChild(g);
+    });
+  }
+
+  // Listen for game-state updates
+  window.addEventListener('game-state-update', () => {
+    renderStations();
+  });
+
+  // Handle station clicks for track creation
+  document.addEventListener('click', (e: Event) => {
+    const target = e.target as Element;
+    const el = target.closest('[data-station-id]');
+    if (!el) return;
+    const stationId = el.getAttribute('data-station-id');
+    if (!stationId) return;
+
+    const gameState = (window as any).gameState;
+    if (!gameState) return;
+
+    if (!gameState.isConnecting) {
+      gameState.selectedStation = stationId;
+      gameState.isConnecting = true;
+      el.classList.add('selected');
+      showMessage('Selected ' + getStationName(stationId) + '. Click another station to connect.', 'info');
+    } else {
+      if (stationId !== gameState.selectedStation) {
+        createTrack(gameState.selectedStation, stationId);
+      }
+      document.querySelectorAll('[data-station-id]').forEach((el: Element) => el.classList.remove('selected'));
+      gameState.selectedStation = null;
+      gameState.isConnecting = false;
+    }
+  });
+
+  function getStationName(id: string) {
+    const s = (window as any).gameState?.stations?.find((st: any) => st.id === id);
+    return s ? s.name : 'Unknown';
+  }
+
+  function createTrack(a: string, b: string) {
+    const gameState = (window as any).gameState;
+    const stationA = gameState?.stations?.find((s: any) => s.id === a);
+    const stationB = gameState?.stations?.find((s: any) => s.id === b);
+    if (!stationA || !stationB) return;
+
+    const dx = stationB.x - stationA.x;
+    const dy = stationB.y - stationA.y;
+    const distance = Math.round(Math.hypot(dx, dy));
+
+    const exists = gameState?.tracks?.some((t: any) =>
+      (t.stationA === a && t.stationB === b) || (t.stationA === b && t.stationB === a)
+    );
+    if (exists) { showMessage('Track already exists.', 'error'); return; }
+
+    const cost = distance * 100;
+    if (gameState?.account?.balance < cost) { showMessage('Insufficient funds.', 'error'); return; }
+
+    gameState.account.balance -= cost;
+    gameState.account.expenses += cost;
+
+    const track = {
+      id: 'track-' + Date.now(),
+      stationA: a,
+      stationB: b,
+      distance: distance,
+      wear: 0,
+      state: 'usable'
+    };
+    gameState.tracks.push(track);
+    renderTrack(track);
+    updateGameState();
+    showMessage('Track built for ' + cost + '. Balance: ' + gameState.account.balance, 'success');
+  }
+
+  function renderTrack(track: any) {
+    const layer = document.getElementById('tracksLayer');
+    if (!layer) return;
+
+    const a = (window as any).gameState?.stations?.find((s: any) => s.id === track.stationA);
+    const b = (window as any).gameState?.stations?.find((s: any) => s.id === track.stationB);
+    if (!a || !b) return;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', String(a.x));
+    line.setAttribute('y1', String(a.y));
+    line.setAttribute('x2', String(b.x));
+    line.setAttribute('y2', String(b.y));
+    line.setAttribute('stroke', '#666');
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('data-track-id', track.id);
+    line.classList.add('track-line');
+    layer.appendChild(line);
+  }
+
+  function showMessage(text: string, type: string) {
+    type = type || 'info';
+    const ev = new CustomEvent('game-message', { detail: { text: text, type: type, timestamp: Date.now() } });
+    window.dispatchEvent(ev);
+  }
+
+  function updateGameState() {
+    const ev = new CustomEvent('game-state-update', { detail: (window as any).gameState });
+    window.dispatchEvent(ev);
+  }
+
+  // Initial message
+  showMessage('Welcome to Rail Boss! Click a station to start building tracks.', 'info');
+</script>
+
 <style>
-.map-container {
-  width: 100%;
-  height: 100%;
-}
-.map-svg {
-  width: 100%;
-  height: 100%;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-}
+  .map-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+  .map-svg { width: 100%; height: 100%; background: #e8e8e8; border-radius: 8px; }
+  .track-line { transition: stroke 0.3s ease; }
+  .track-line:hover { stroke: #ff6b6b !important; stroke-width: 5 !important; cursor: pointer; }
 </style>

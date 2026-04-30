@@ -1,18 +1,38 @@
 ---
 /**
  * Astro component for rendering a Station.
- * Expects a `station` prop of type `Station` from the lib.
+ * Expects a `station` prop as a plain object with station properties.
  */
-import type { Station } from '../lib/Station.ts';
 interface Props {
-  station: Station;
+  station: {
+    id: string;
+    name: string;
+    colour: string;
+    size: number;          // platform count used as radius multiplier
+    x: number;
+    y: number;
+    platforms: number;
+    waitingPassengers: number;
+  };
 }
 const { station } = Astro.props;
 ---
-
-<div class="station" data-station-id={station.id} style={`border: 1px solid ${station.colour}; padding: 4px; margin: 4px; display: inline-block;`}>
-  <div class="station-name"><strong>{station.name}</strong></div>
-  <div class="station-colour" style={`background-color: ${station.colour}; width: 12px; height: 12px; display: inline-block; margin-right: 4px;`}></div>
-  <div class="platforms">Platforms: {station.capacity()}</div>
-  <div class="waiting-passengers">Waiting: {station.waitingPassengers}</div>
-</div>
+<g data-station-id={station.id}>
+  <!-- Circle representing the station -->
+  <circle
+    cx={station.x}
+    cy={station.y}
+    r={station.size * 5}
+    fill={station.colour}
+    stroke="#000"
+    stroke-width="2"
+  />
+  <!-- Station name label -->
+  <text
+    x={station.x}
+    y={station.y - (station.size * 5) - 5}
+    text-anchor="middle"
+    font-size="12"
+    fill="#fff"
+  >{station.name}</text>
+</g>

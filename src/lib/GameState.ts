@@ -1,26 +1,41 @@
-/**
- * Game state interface defining the structure of the game's state
- */
-import type { TrackInventory } from "./TrackInventory.ts";
-import type { Station } from "./Station.ts";
+import { TrackInventory } from "./TrackInventory.ts";
+import { Station, StationSize } from "./Station.ts";
 
-export interface GameState {
-  /**
-   * Track inventory managing all track segments
-   */
+export class GameState {
   inventory: TrackInventory;
-
-  /**
-   * Array of all stations in the game
-   */
   stations: Station[];
-
-  /**
-   * Player's financial state
-   */
   account: {
     balance: number;
     expenses: number;
     income: number;
   };
+  trains: any[];
+  tracks: any[];
+  isConnecting: boolean;
+  selectedStation: string | null;
+
+  constructor() {
+    this.inventory = new TrackInventory();
+    this.stations = [
+      new Station(
+        "Copenhagen",
+        "Copenhagen",
+        "#007bff",
+        StationSize.Large,
+        0,
+        0,
+      ),
+      new Station("Aarhus", "Aarhus", "#28a745", StationSize.Medium, 100, 0),
+      new Station("Odense", "Odense", "#dc3545", StationSize.Small, 200, 0),
+    ];
+    this.account = {
+      balance: 10000,
+      expenses: 0,
+      income: 0,
+    };
+    this.trains = [];
+    this.tracks = [];
+    this.isConnecting = false;
+    this.selectedStation = null;
+  }
 }
